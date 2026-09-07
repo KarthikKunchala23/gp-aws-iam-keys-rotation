@@ -1,2 +1,15 @@
-.venv
-__pycache__
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+
+# Build artifacts
+build/
+*.zip
+
+# Generated files
+response.json
+
+# macOS
+.DS_Store
