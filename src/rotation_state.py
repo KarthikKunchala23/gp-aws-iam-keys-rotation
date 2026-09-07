@@ -105,6 +105,70 @@ def get_rotation_state(
         for key, value in item.items()
     }
 
+
+def confirm_handoff(
+    rotation_id: str
+) -> None:
+    """
+    Confirm that the application has been updated
+    to use the new IAM access key.
+    """
+
+    response = client.get_item(
+        TableName=TABLE_NAME,
+        Key={
+            "rotation_id": {
+                "S": rotation_id
+            }
+        }
+    )
+
+    item = response.get("Item")
+
+    if not item:
+        raise ValueError(
+            f"Rotation not found: {rotation_id}"
+        )
+
+    current_status = item["status"]["S"]
+
+    if current_status != "HANDOFF_PENDING":
+        raise ValueError(
+            f"Rotation cannot be confirmed. "
+            f"Current status: {current_status}"
+        )
+
+    confirmation_time = datetime.now(
+        timezone.utc
+    ).isoformat()
+
+    client.update_item(
+        TableName=TABLE_NAME,
+        Key={
+            "rotation_id": {
+                "S": rotation_id
+            }
+        },
+        UpdateExpression="""
+            SET
+                #status = :status,
+                confirmation_received_at = :confirmed_at
+        """,
+        ExpressionAttributeNames={
+            "#status": "status"
+        },
+        ExpressionAttributeValues={
+            ":status": {
+                "S": "HANDOFF_CONFIRMED"
+            },
+            ":confirmed_at": {
+                "S": confirmation_time
+            }
+        }
+    )
+
+
+
 def mark_key_deactivated(
     rotation_id: str
 ) -> None:
