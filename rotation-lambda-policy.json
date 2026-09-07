@@ -1,0 +1,44 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "IAMKeyRotation",
+      "Effect": "Allow",
+      "Action": [
+        "iam:ListUsers",
+        "iam:ListAccessKeys",
+        "iam:CreateAccessKey",
+        "iam:UpdateAccessKey",
+        "iam:DeleteAccessKey"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "RotationState",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem"
+      ],
+      "Resource": "arn:aws:dynamodb:ap-south-1:897722700244:table/iam-key-rotation-state"
+    },
+    {
+      "Sid": "SecretsManager",
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:CreateSecret",
+        "secretsmanager:PutSecretValue"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "SNSEmailNotification",
+      "Effect": "Allow",
+      "Action": [
+        "sns:Publish"
+      ],
+      "Resource": "arn:aws:sns:ap-south-1:897722700244:iam-key-rotation"
+    }
+  ]
+}
