@@ -8,6 +8,7 @@ TABLE_NAME = "iam-key-rotation-state"
 
 
 def create_rotation_state(
+    rotation_id: str,
     user_name: str,
     team_name: str,
     email: str,
@@ -20,11 +21,6 @@ def create_rotation_state(
     Create and persist the initial IAM key rotation state.
     """
 
-    rotation_id = (
-        f"{user_name}#"
-        f"{old_access_key_id}#"
-        f"{new_access_key_id}"
-    )
 
     state = {
         "rotation_id": rotation_id,

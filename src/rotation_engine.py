@@ -19,6 +19,7 @@ from iam_key_rotation import (
     delete_old_key
 )
 
+
 def collect_rotation_results(config: dict) -> list[dict]:
     """
     Discover IAM users and access keys and determine
@@ -60,6 +61,7 @@ def collect_rotation_results(config: dict) -> list[dict]:
             })
 
     return results
+
 
 def run_rotation(config: dict):
     results = collect_rotation_results(config)
@@ -233,6 +235,53 @@ def rotate_old_keys(
 
             key = active_keys[0]
 
+            inactive_keys = [
+                item
+                for item in keys
+                if item["status"] == "Inactive"
+            ]
+
+            existing_rotation = None
+
+            for old_key in inactive_keys:
+
+                rotation_state = get_rotation_state(
+                    user_name=user_name,
+                    old_access_key_id=old_key[
+                        "access_key_id"
+                    ],
+                    new_access_key_id=key[
+                        "access_key_id"
+                    ]
+                )
+
+                if rotation_state:
+                    existing_rotation = rotation_state
+                    break
+
+            if existing_rotation:
+
+                print(
+                    f"{user_name}: "
+                    f"Existing rotation found."
+                )
+
+                print(
+                    f"  Rotation state : "
+                    f"{existing_rotation['status']}"
+                )
+
+                print(
+                    f"  Active key     : "
+                    f"{key['access_key_id']}"
+                )
+
+                print(
+                    f"  No new access key required."
+                )
+
+                continue
+
             if key["rotation_status"] == "ROTATION REQUIRED":
 
                 print(
@@ -265,6 +314,12 @@ def rotate_old_keys(
                     "sns_topic_arn"
                 ]
 
+                confirmation_api_base_url = config[
+                    "confirmation"
+                ][
+                    "api_base_url"
+                ]
+
                 print(
                     f"{user_name}: "
                     f"Team = {team_name}"
@@ -287,7 +342,8 @@ def rotate_old_keys(
                     ],
                     team_name=team_name,
                     email=email,
-                    topic_arn=topic_arn
+                    topic_arn=topic_arn,
+                    confirmation_api_base_url=confirmation_api_base_url
                 )
 
                 new_key = rotation_result["new_key"]
@@ -368,6 +424,12 @@ def rotate_old_keys(
                 "notification"
             ][
                 "sns_topic_arn"
+            ]
+
+            confirmation_api_base_url = config[
+                "confirmation"
+            ][
+                "api_base_url"
             ]
 
             rotation_state = get_rotation_state(
@@ -469,6 +531,17 @@ def rotate_old_keys(
                 "  Sending handoff notification..."
             )
 
+            rotation_id = (
+                f"{user_name}#"
+                f"{old_key['access_key_id']}#"
+                f"{new_key['access_key_id']}"
+            )
+
+            confirmation_url = (
+                f"{confirmation_api_base_url}"
+                f"/rotations/{rotation_id}/confirm"
+            )
+
             message_id = send_rotation_notification(
                 topic_arn=topic_arn,
                 team_name=team_name,
@@ -479,7 +552,8 @@ def rotate_old_keys(
                 ],
                 new_access_key_id=new_key[
                     "access_key_id"
-                ]
+                ],
+                confirmation_url=confirmation_url
             )
 
             print(
@@ -498,7 +572,8 @@ def rotate_old_keys(
                     "access_key_id"
                 ],
                 secret_arn="",
-                message_id=message_id
+                message_id=message_id,
+                rotation_id=rotation_id
             )
 
             print(

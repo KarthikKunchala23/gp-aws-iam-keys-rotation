@@ -5,7 +5,8 @@ from datetime import datetime, timezone, timedelta
 
 from iam import (
     deactivate_access_key,
-    delete_access_key
+    delete_access_key,
+    get_access_keys
 )
 
 from rotation_state import (
@@ -34,7 +35,8 @@ def rotate_access_key(
     old_access_key_id: str,
     team_name: str,
     email: str,
-    topic_arn: str
+    topic_arn: str,
+    confirmation_api_base_url: str
 ) -> dict:
 
     # --------------------------------------------------
@@ -46,6 +48,17 @@ def rotate_access_key(
     )
 
     new_access_key_id = new_key["AccessKeyId"]
+
+    rotation_id = (
+        f"{user_name}#"
+        f"{old_access_key_id}#"
+        f"{new_access_key_id}"
+    )
+
+    confirmation_url = (
+        f"{confirmation_api_base_url}"
+        f"/rotations/{rotation_id}/confirm"
+    )
 
     # --------------------------------------------------
     # 2. Store credentials in Secrets Manager
@@ -66,7 +79,8 @@ def rotate_access_key(
         email=email,
         iam_user=user_name,
         old_access_key_id=old_access_key_id,
-        new_access_key_id=new_access_key_id
+        new_access_key_id=new_access_key_id,
+        confirmation_url=confirmation_url
     )
 
     # --------------------------------------------------
@@ -80,7 +94,8 @@ def rotate_access_key(
         old_access_key_id=old_access_key_id,
         new_access_key_id=new_access_key_id,
         secret_arn=secret_arn,
-        message_id=message_id
+        message_id=message_id,
+        rotation_id=rotation_id
     )
 
     # --------------------------------------------------

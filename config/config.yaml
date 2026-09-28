@@ -11,8 +11,12 @@ teams:
     iam_user: terraform-execution
     email: karthikkunchala170@gmail.com
 
+  - name: test
+    iam_user: test
+    email: karthikkunchala170@gmail.com
+
 rotation:
-  threshold_days: 15
+  threshold_days: 0
   observation_days: 2
   deletion_retention_days: 7
 
