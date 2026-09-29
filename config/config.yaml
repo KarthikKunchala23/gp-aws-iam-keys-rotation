@@ -16,7 +16,7 @@ teams:
     email: karthikkunchala170@gmail.com
 
 rotation:
-  threshold_days: 0
+  threshold_days: 15
   observation_days: 2
   deletion_retention_days: 7
 
